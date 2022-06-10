@@ -1,0 +1,26 @@
+<users>
+    <user> 
+        <name>Alice</name>
+        <id>1</id>
+        <public-key-path>../data/server-keys/alice.pub</public-key-path>
+        <base-path>../data/tmp/1/</base-path>
+    </user>
+    <user>
+        <name>Bob</name>
+        <id>2</id>
+        <public-key-path>../data/server-keys/bob.pub</public-key-path>
+        <base-path>../data/tmp/2/</base-path>
+    </user>
+    <user> 
+        <name>Charlie</name>
+        <id>3</id>
+        <public-key-path>../data/server-keys/charlie.pub</public-key-path>
+        <base-path>../data/tmp/3/</base-path>
+    </user>
+    <user> 
+        <name>David</name>
+        <id>4</id>
+        <public-key-path>../data/server-keys/david.pub</public-key-path>
+        <base-path>../data/tmp/4/</base-path>
+    </user>
+</users>

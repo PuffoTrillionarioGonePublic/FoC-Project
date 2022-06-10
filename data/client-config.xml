@@ -1,0 +1,8 @@
+<config>
+    <private-key-path>../data/client-keys/charlie.pem</private-key-path>
+    <id>3</id>
+    <server-ip>127.0.0.1</server-ip>
+    <port>9000</port>
+    <server-common-name>/C=IT/ST=XX/O=PuffoTrillionario/CN=s3.puffotrillionario.com</server-common-name>
+    <root-ca-path>../data/server-keys/rootca.com.crt</root-ca-path>
+</config>

@@ -1,0 +1,4 @@
+<config>
+    <private-key-path>../data/server-keys/puffotrillionario.pem</private-key-path>
+    <certificate-path>../data/server-keys/s3.puffotrillionario.com.crt</certificate-path>
+</config>
