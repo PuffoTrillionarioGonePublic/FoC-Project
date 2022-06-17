@@ -1,13 +1,15 @@
 #ifndef S3L_UTIL_H
 #define S3L_UTIL_H
 
+#include "S3L/constants.h"
+
+#include <openssl/crypto.h>
 #include <boost/format.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <deque>
 #include <functional>
 #include <iostream>
-#include "S3L/constants.h"
-
+#include <regex>
 
 using boost::numeric_cast;
 
@@ -23,22 +25,22 @@ using i64 = std::int64_t;
 
 inline void secure_scrub_memory_func(void *ptr, size_t n) {
   volatile auto *p = reinterpret_cast<volatile uint8_t *>(ptr);
-  for (size_t i = 0; i != n; ++i)
-    p[i] = 0;
+  for (size_t i = 0; i != n; ++i) p[i] = 0;
 }
 
-static void (*volatile secure_scrub_memory_ptr)(void *, size_t) = secure_scrub_memory_func;
+static void (*volatile secure_scrub_memory_ptr)(void *, size_t) =
+    secure_scrub_memory_func;
 
 inline void secure_scrub_memory(void *ptr, size_t n) {
   secure_scrub_memory_ptr(ptr, n);
 }
 
-template<typename T>
+template <typename T>
 inline void secure_scrub_memory(T &t) {
   secure_scrub_memory(&t, sizeof(t));
 }
 
-template<typename T>
+template <typename T>
 class secure_allocator {
  public:
   /**
@@ -59,7 +61,7 @@ class secure_allocator {
 
   ~secure_allocator() noexcept = default;
 
-  template<typename U>
+  template <typename U>
   secure_allocator(const secure_allocator<U> &) noexcept {}
 
   T *allocate(std::size_t n) {
@@ -67,83 +69,131 @@ class secure_allocator {
   }
 
   void deallocate(T *p, std::size_t n) {
-    if (p == nullptr)
-      return;
+    if (p == nullptr) return;
 
     secure_scrub_memory(p, n * sizeof(T));
     ::operator delete(p);
   }
 };
 
-template<typename T, typename U>
-inline bool
-operator==(const secure_allocator<T> &, const secure_allocator<U> &) { return true; }
 
-template<typename T, typename U>
-inline bool
-operator!=(const secure_allocator<T> &, const secure_allocator<U> &) { return false; }
+template <typename T, typename U>
+inline bool operator==(const secure_allocator<T> &,
+                       const secure_allocator<U> &) {
+  return true;
+}
 
-template<typename T>
+template <typename T, typename U>
+inline bool operator!=(const secure_allocator<T> &,
+                       const secure_allocator<U> &) {
+  return false;
+}
+
+template <typename T>
 using secure_vector = std::vector<T, secure_allocator<T>>;
 
-template<typename T, typename A =  std::allocator<T>>
+template <typename T, typename A = std::allocator<T>>
 using Vec = std::vector<T, A>;
 
-template<typename T>
+template <typename T>
 using SecVec = secure_vector<T>;
 
-inline Vec<u8> operator "" _u8(const char *str, size_t length) {
+inline Vec<u8> operator"" _u8(const char *str, size_t length) {
   return Vec<u8>(str, str + length);
 }
 
-template<std::integral T, size_t n>
-struct SecArray : public std::array<T, n> {
-  ~SecArray() {
-    explicit_bzero(this, n);
-  }
-};
 
-template<typename T>
-concept ByteArray = std::ranges::range<T>
-    && requires(T &t) {
-      { t.data() };
-      { sizeof(*t.data()) == 1 };
-    };
+template<std::integral T>
+inline auto operator==(const SecVec<T> &, const SecVec<T> &) {
+  static_assert(sizeof(T) == 0);
+}
 
-template<typename ... Ts>
-struct overload : Ts ... {
-  using Ts::operator()...;
-};
-template<typename... Ts> overload(Ts...) -> overload<Ts...>; // line not needed in C++20...
+template <std::integral T, size_t N>
+bool AreEqual(const std::array<T, N> &arr1, const std::array<T, N> & arr2) {
+  return arr1 == arr2;
+}
 
 
-
-template<size_t first_size, size_t second_size, size_t n>
-inline auto SplitArray(const std::array<u8, n> &arr) -> std::tuple<SecArray<u8, first_size>, SecArray<u8, second_size>> {
-  static_assert(first_size == n - second_size);
-  auto a1 = SecArray<u8, first_size>{};
-  auto a2 = SecArray<u8, second_size>{};
-  std::copy(arr.begin(), arr.begin() + first_size, a1.begin());
-  std::copy(arr.begin() + first_size, arr.end(), a2.begin());
-  return {a1, a2};
+template<std::integral T, size_t N>
+constexpr inline auto operator==(const std::array<T, N> &, const std::array<T, N> &) {
+  static_assert(sizeof(T) == 0);
 }
 
 
 
-template<typename T, size_t n, size_t m>
-inline auto Concat(const std::array<T, n> &arr1, 
-                   const std::array<T, m> &arr2) {
-  auto rv = std::array<T, n + m>{};
-  for (size_t i = 0; i < n; i++) {
+
+
+template <std::integral T, size_t N>
+struct SecArray : public std::array<T, N> {
+  ~SecArray() { explicit_bzero(this, N); }
+};
+
+
+
+
+
+
+template<std::integral T, size_t N>
+inline auto operator==(const SecArray<T, N> &, const SecArray<T, N> &) {
+  static_assert(sizeof(T) == 0);
+}
+
+
+
+template <typename T>
+concept ByteArray = std::ranges::range<T> && requires(T &t) {
+  {t.data()};
+  {sizeof(*t.data()) == 1};
+};
+
+template <size_t N>
+bool AreSecureEqual(const std::array<u8, N> &arr1, const std::array<u8, N> &arr2) {
+  return CRYPTO_memcmp(arr1.data(), arr2.data(), N) == 0;
+}
+
+template <size_t N>
+bool AreSecureEqual(const SecArray<u8, N> &arr1, const SecArray<u8, N> &arr2) {
+  return CRYPTO_memcmp(arr1.data(), arr2.data(), N) == 0;
+}
+
+bool AreSecureEqual(const ByteArray auto &arr1, const ByteArray auto &arr2) {
+  if (arr1.size() != arr2.size())
+    return false;
+  return CRYPTO_memcmp(arr1.data(), arr2.data(), arr1.size()) == 0;
+}
+
+bool AreEqual(const ByteArray auto &arr1, const ByteArray auto &arr2) {
+  if (arr1.size() != arr2.size())
+    return false;
+  return std::memcmp(arr1.data(), arr2.data(), arr1.size()) == 0;
+}
+
+
+
+template <size_t FirstSize, size_t SecondSize, size_t N>
+inline auto SplitArray(const std::array<u8, N> &arr)
+    -> std::tuple<SecArray<u8, FirstSize>, SecArray<u8, SecondSize>> {
+  static_assert(FirstSize == N - SecondSize);
+  auto a1 = SecArray<u8, FirstSize>{};
+  auto a2 = SecArray<u8, SecondSize>{};
+  std::copy(arr.begin(), arr.begin() + FirstSize, a1.begin());
+  std::copy(arr.begin() + FirstSize, arr.end(), a2.begin());
+  return {a1, a2};
+}
+
+template <typename T, size_t N, size_t M>
+inline auto Concat(const std::array<T, N> &arr1, const std::array<T, M> &arr2) {
+  auto rv = std::array<T, N + M>{};
+  for (size_t i = 0; i < N; i++) {
     rv[i] = arr1[i];
   }
-  for (size_t i = 0; i < m; i++) {
-    rv[n + i] = arr2[i];
+  for (size_t i = 0; i < M; i++) {
+    rv[N + i] = arr2[i];
   }
   return rv;
 }
 
-template<typename T = Vec<u8>>
+template <typename T = Vec<u8>>
 inline auto Concat(const ByteArray auto &arr1, const ByteArray auto &arr2) {
   auto rv = T(arr1.begin(), arr1.end());
   rv.insert(rv.begin(), arr2.begin(), arr2.end());
@@ -151,23 +201,24 @@ inline auto Concat(const ByteArray auto &arr1, const ByteArray auto &arr2) {
 }
 
 inline std::ostream &operator<<(std::ostream &os, const Vec<u8> &v) {
-	const char alpha[] = "0123456789abcdef";
-    std::for_each(v.begin(), v.end(), [&](u8 scan) {
-      os << alpha[scan >> 4] << alpha[scan & 0xf];
-    });
+  const char alpha[] = "0123456789abcdef";
+  std::for_each(v.begin(), v.end(),
+                [&](u8 scan) { os << alpha[scan >> 4] << alpha[scan & 0xf]; });
   return os;
 }
 
-template<size_t n>
-inline std::ostream &operator<<(std::ostream &os, const std::array<u8, n> &v) {
+template <size_t N>
+inline std::ostream &operator<<(std::ostream &os, const std::array<u8, N> &v) {
   os << Vec<u8>(v.begin(), v.end());
   return os;
 }
 
-template<typename T, size_t n>
-inline consteval size_t ArraySize(const std::array<T, n> &a) {
-  return n;
+template <typename T, size_t N>
+inline consteval size_t ArraySize(const std::array<T, N> &) {
+  return N;
 }
 
 
-#endif // S3L_UTIL_H
+
+
+#endif  // S3L_UTIL_H

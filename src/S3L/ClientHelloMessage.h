@@ -3,30 +3,24 @@
 #include "S3LMessage.h"
 
 struct ClientHelloMessage : public S3LMessage {
-  S3LHeader rh{};
-  std::array<u8, kIvLength> iv{};
-  u64 client_id{};
+  S3LHeader header{};
   u32 client_dh_pubkey_length{};
-  u32 sign_length{};
-
   Vec<u8> client_dh_pubkey{};
-  Vec<u8> sign{};
 
   [[nodiscard]] size_t GetTotalSize() const;
 
   [[nodiscard]] NetworkBuffer Serialize() const override;
 
-  ClientHelloMessage() : rh{kClientHello} {}
+  ClientHelloMessage() : header{kClientHello} {}
 
-  explicit ClientHelloMessage(const S3LHeader& rh) : rh{rh} {}
+  explicit ClientHelloMessage(const S3LHeader &h) : header{h} {}
 
   static std::shared_ptr<ClientHelloMessage> Deserialize(
-      const S3LHeader& rh, const Vec<u8>& content_bytes);
+      const S3LHeader &h, const Vec<u8> &content_bytes);
 
   [[nodiscard]] Vec<u8> GetDataToSign() const;
 
-  static ClientHelloMessage Create(crypto::DH_mng& dh_context, u64 id,
-                                   const SecVec<u8>& prv_key);
+  static ClientHelloMessage Create(crypto::DiffieHellmanManager &dh_context);
 };
 
 #endif  // FOC_PROJECT_SRC_S3L_CLIENTHELLOMESSAGE_H_

@@ -1,22 +1,21 @@
 #ifndef CRYPTO_HASH_H
 #define CRYPTO_HASH_H
 
-//#include "../util.hh"
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
 #include "../util.h"
 #include "error.hh"
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
 
 namespace crypto {
 
-template<const EVP_MD *(*MD)()>
+template <const EVP_MD *(*MD)()>
 struct HASH {
   EVP_MD_CTX *ctx_;
   const EVP_MD *md_;
 
   HASH() {
     ctx_ = EVP_MD_CTX_new();
-	OPENSSLCHECKALLOC(ctx_);
+    OPENSSLCHECKALLOC(ctx_);
     md_ = MD();
     OPENSSLCHECK(EVP_DigestInit(ctx_, md_));
   }
@@ -30,7 +29,7 @@ struct HASH {
     return Update(data.data(), data.size());
   }
 
-  template<ByteArray Container = Vec<u8>>
+  template <ByteArray Container = Vec<u8>>
   Container Digest() {
     auto digest = Container(EVP_MD_size(md_));
     uint digestlen;
@@ -40,11 +39,9 @@ struct HASH {
     return digest;
   }
 
-  ~HASH() {
-    EVP_MD_CTX_free(ctx_);
-  }
+  ~HASH() { EVP_MD_CTX_free(ctx_); }
 
-  template<ByteArray Container = Vec<u8>>
+  template <ByteArray Container = Vec<u8>>
   static Container Make(const ByteArray auto &data) {
     return HASH<MD>().Update(data).template Digest<Container>();
   }
@@ -55,13 +52,12 @@ using SHA256 = HASH<EVP_sha256>;
 using MD5 = HASH<EVP_md5>;
 
 struct HMAC {
-
   HMAC_CTX *ctx_;
   const EVP_MD *md_;
 
   explicit HMAC(const ByteArray auto &key) {
     ctx_ = HMAC_CTX_new();
-	OPENSSLCHECKALLOC(ctx_);
+    OPENSSLCHECKALLOC(ctx_);
     md_ = EVP_sha256();
     OPENSSLCHECK(HMAC_Init_ex(ctx_, key.data(), key.size(), md_, nullptr));
   }
@@ -84,15 +80,13 @@ struct HMAC {
     return digest;
   }
 
-  ~HMAC() {
-    HMAC_CTX_free(ctx_);
-  }
+  ~HMAC() { HMAC_CTX_free(ctx_); }
 
   static Vec<u8> Make(const ByteArray auto &key, const ByteArray auto &data) {
     return HMAC(key).Update(data).Digest();
   }
 };
 
-} // /namespace crypto
+}  // namespace crypto
 
-#endif // /CRYPTO_HASH_H
+#endif  // /CRYPTO_HASH_H

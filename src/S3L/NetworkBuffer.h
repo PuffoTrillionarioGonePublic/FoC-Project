@@ -1,7 +1,7 @@
 #ifndef UNTITLED2_NETWORKBUFFER_H
 #define UNTITLED2_NETWORKBUFFER_H
 
-#include "util.h"
+#include "../util.h"
 #include <array>
 #include <concepts>
 #include <iostream>
@@ -13,11 +13,11 @@ struct NetworkBuffer {
 
   NetworkBuffer() = default;
 
-  NetworkBuffer(const NetworkBuffer&) = default;
+  NetworkBuffer(const NetworkBuffer &) = default;
 
-  NetworkBuffer(NetworkBuffer&&) = default;
+  NetworkBuffer(NetworkBuffer &&) = default;
 
-  explicit NetworkBuffer(const auto& iterable)
+  explicit NetworkBuffer(const auto &iterable)
       : NetworkBuffer(iterable.begin(), iterable.end()) {}
 
   NetworkBuffer(std::input_iterator auto begin, std::input_iterator auto end) {
@@ -40,12 +40,12 @@ struct NetworkBuffer {
     Push(v);
   }
   template <std::integral T, size_t n>
-  void Push(const std::array<T, n>& arr) {
+  void Push(const std::array<T, n> &arr) {
     buffer_.insert(buffer_.end(), arr.begin(), arr.end());
   }
 
   template <std::integral T>
-  void Push(const Vec<T>& vec) {
+  void Push(const Vec<T> &vec) {
     buffer_.insert(buffer_.end(), vec.begin(), vec.end());
   }
 
@@ -68,7 +68,7 @@ struct NetworkBuffer {
   template <std::integral T>
   Vec<T> PopVec(size_t n) {
     // TODO extend this possibility
-    if (n > buffer_.size()) {
+    if (n > buffer_.size() / sizeof(T)) {
       throw std::runtime_error{"invalid size"};
     }
     Vec<T> arr(n);
@@ -81,9 +81,7 @@ struct NetworkBuffer {
 
   template <std::integral T>
   T PopInteger() {
-    // TODO extend this possibility
-    // TODO add check
-    auto v = PopVec<T>(sizeof(T));
+    auto v = PopVec<u8>(sizeof(T));
     T rv{};
     for (size_t i = 0; i < sizeof(T); ++i) {
       T n = v.back();
@@ -92,59 +90,59 @@ struct NetworkBuffer {
     }
     return rv;
   }
-  [[nodiscard]] const std::deque<u8>& Data() const noexcept { return buffer_; }
+  [[nodiscard]] const std::deque<u8> &Data() const noexcept { return buffer_; }
 
   template <typename T>
   T Data() const {
     return T(buffer_.begin(), buffer_.end());
   }
 
-  friend NetworkBuffer& operator<<(NetworkBuffer& network_stream,
-                                   const auto& n) {
+  friend NetworkBuffer &operator<<(NetworkBuffer &network_stream,
+                                   const auto &n) {
     network_stream.Push(n);
     return network_stream;
   }
 
-  friend NetworkBuffer& operator<<(NetworkBuffer&& network_stream,
-                                   const auto& n) {
+  friend NetworkBuffer &operator<<(NetworkBuffer &&network_stream,
+                                   const auto &n) {
     network_stream.Push(n);
     return network_stream;
   }
 
   template <std::integral T, size_t n>
-  friend NetworkBuffer& operator<<(NetworkBuffer& network_stream,
-                                   const std::array<T, n>& arr) {
+  friend NetworkBuffer &operator<<(NetworkBuffer &network_stream,
+                                   const std::array<T, n> &arr) {
     network_stream.Push(arr);
     return network_stream;
   }
 
-  friend NetworkBuffer& operator>>(NetworkBuffer& network_stream,
-                                   std::integral auto& n) {
+  friend NetworkBuffer &operator>>(NetworkBuffer &network_stream,
+                                   std::integral auto &n) {
     n = network_stream.PopInteger<std::decay_t<decltype(n)>>();
     return network_stream;
   }
 
   template <std::integral T, size_t n>
-  friend NetworkBuffer& operator>>(NetworkBuffer& network_stream,
-                                   std::array<T, n>& arr) {
+  friend NetworkBuffer &operator>>(NetworkBuffer &network_stream,
+                                   std::array<T, n> &arr) {
     arr = network_stream.template PopArray<T, n>();
     return network_stream;
   }
 
   template <std::integral T, size_t n>
-  friend NetworkBuffer& operator<<(NetworkBuffer&& network_stream,
-                                   const std::array<T, n>& arr) {
+  friend NetworkBuffer &operator<<(NetworkBuffer &&network_stream,
+                                   const std::array<T, n> &arr) {
     return network_stream << arr;
   }
 
-  friend NetworkBuffer& operator>>(NetworkBuffer&& network_stream,
-                                   std::integral auto& n) {
+  friend NetworkBuffer &operator>>(NetworkBuffer &&network_stream,
+                                   std::integral auto &n) {
     return network_stream >> n;
   }
 
   template <std::integral T, size_t n>
-  friend NetworkBuffer& operator>>(NetworkBuffer&& network_stream,
-                                   std::array<T, n>& arr) {
+  friend NetworkBuffer &operator>>(NetworkBuffer &&network_stream,
+                                   std::array<T, n> &arr) {
     return network_stream >> arr;
   }
 };

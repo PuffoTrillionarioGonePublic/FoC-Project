@@ -2,20 +2,20 @@
 #define CRYPTO_RANDOM_H
 
 //#include "../crypto_api.hh"
-#include <openssl/rand.h>
 #include "../util.h"
 #include "error.hh"
+#include <openssl/rand.h>
 
 namespace crypto {
 
-template<typename Container = Vec<u8>>
+template <typename Container = Vec<u8>>
 inline Container RandomBytes(size_t n) {
   auto rv = Container(n);
   OPENSSLCHECK(RAND_bytes(rv.data(), n));
   return rv;
 }
 
-template<size_t N, typename Container = std::array<u8, N>>
+template <size_t N, typename Container = std::array<u8, N>>
 inline Container GenerateRandomBytes() {
   static_assert(N <= std::numeric_limits<int>::max());
   auto rv = Container{};
@@ -23,6 +23,6 @@ inline Container GenerateRandomBytes() {
   return rv;
 }
 
-} // /namespace crypto
+}  // namespace crypto
 
-#endif // /CRYPTO_RANDOM_H
+#endif  // /CRYPTO_RANDOM_H

@@ -3,6 +3,7 @@
 
 #include "IOChannel.h"
 #include <boost/asio.hpp>
+
 class SocketChannel : public IOChannel {
   std::shared_ptr<boost::asio::io_service> io_service_;
   std::shared_ptr<boost::asio::ip::tcp::socket> sd_;
@@ -27,7 +28,7 @@ class SocketChannel : public IOChannel {
 
   Vec<u8> Read(size_t n) override;
 
-  void Write(const Vec<u8>& v) override;
+  void Write(const Vec<u8> &v) override;
 
   bool IsClosed() override { return IsClosed_(); }
 

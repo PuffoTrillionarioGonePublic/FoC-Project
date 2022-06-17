@@ -12,7 +12,8 @@ enum HandshakePayload {
   kServerHello,
   kShutdown,
   kData,
-  kBadConnection
+  kBadConnection,
+  kClientFinished
 };
 
 #endif

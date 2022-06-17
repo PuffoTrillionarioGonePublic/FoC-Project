@@ -18,7 +18,7 @@ struct ListParams {
   DECL_FOR_SERIALIZATION(ListParams, path)
 };
 
-constexpr static char const* kCommands[] = {
+constexpr static char const *kCommands[] = {
     "upload", "download", "delete", "list", "rename", "logout", "help"};
 
 constexpr static auto kCommandsNumber =
@@ -38,12 +38,12 @@ class ExitException : public std::exception {
     msg_ = std::move(msg);
   }
 
-  [[nodiscard]] const char* what() const noexcept override {
+  [[nodiscard]] const char *what() const noexcept override {
     return msg_.c_str();
   }
 };
 
-auto CommandFromString(const std::string& s) -> std::tuple<Command, size_t> {
+auto CommandFromString(const std::string &s) -> std::tuple<Command, size_t> {
   for (size_t i = 0; i < kCommandsNumber; i++) {
     if (kCommands[i] == s) {
       return kCommandsArray[i];
@@ -59,7 +59,7 @@ struct FileUploadParams {
 
 const size_t kBufferSize = (1UL << 16);
 
-void UploadHandler(IOChannel& io, const std::string& file) {
+void UploadHandler(IOChannel &io, const std::string &file) {
   auto is = std::ifstream{file, std::ios::binary | std::ios::ate};
   if (!is) {
     std::cerr << "File not found" << std::endl;
@@ -82,7 +82,7 @@ void UploadHandler(IOChannel& io, const std::string& file) {
   do {
     auto n_bytes = std::min<size_t>(kBufferSize, size);
     v.resize(n_bytes);
-    is.read((char*)v.data(), n_bytes);
+    is.read((char *)v.data(), n_bytes);
     WriteFileChunk(io, v, offset, "UploadFileChunk",
                    std::filesystem::path{file}.filename().string());
     offset += n_bytes;
@@ -102,7 +102,7 @@ struct FileToDownloadInfo {
   DECL_FOR_SERIALIZATION(FileToDownloadInfo, size, nonce, error_msg)
 };
 
-void DownloadHandler(IOChannel& io, const std::string& file) {
+void DownloadHandler(IOChannel &io, const std::string &file) {
   WriteObject(
       io,
       DownloadParams{.path = std::filesystem::path{file}.filename().string()},
@@ -124,7 +124,7 @@ void DownloadHandler(IOChannel& io, const std::string& file) {
     auto [chunk, offs] = ReadFileChunk(io);
     assert(offset == offs);
     ofs.seekp(offset, std::ios::beg);
-    ofs.write((const char*)chunk.data(), chunk.size());
+    ofs.write((const char *)chunk.data(), chunk.size());
     offset += chunk.size();
   } while (offset < file_info.size);
 }
@@ -146,7 +146,7 @@ struct DeleteConfirm {
   DECL_FOR_SERIALIZATION(DeleteConfirm, nonce, res)
 };
 
-void DeleteHandler(IOChannel& io, const std::string& file) {
+void DeleteHandler(IOChannel &io, const std::string &file) {
   WriteObject(io, DeleteFileRequest{.path = file}, "DeleteFileRequest");
   auto res = ReadObject<DeleteFileRequestRet>(io);
   if (!res.error_msg.empty()) {
@@ -171,7 +171,7 @@ void DeleteHandler(IOChannel& io, const std::string& file) {
   std::cout << response << std::endl;
 }
 
-void ListHandler(IOChannel& io) {
+void ListHandler(IOChannel &io) {
   CallEndpoint(io, "ListFiles");
   auto rv = ReadObject<std::string>(io);
   std::cout << rv << std::endl;
@@ -183,17 +183,17 @@ struct RenameParams {
   DECL_FOR_SERIALIZATION(RenameParams, old_path, new_path)
 };
 
-void RenameHandler(IOChannel& io, const std::string& old_name,
-                   const std::string& new_name) {
+void RenameHandler(IOChannel &io, const std::string &old_name,
+                   const std::string &new_name) {
   WriteObject(io, RenameParams{.old_path = old_name, .new_path = new_name},
               "MoveFile");
   auto rv = ReadObject<std::string>(io);
   std::cout << rv << std::endl;
 }
 
-void LogoutHandler(IOChannel& io) { io.Close(); }
+void LogoutHandler(IOChannel &io) { io.Close(); }
 
-auto ReadCommand(const std::string& str)
+auto ReadCommand(const std::string &str)
     -> std::tuple<Command, std::vector<std::string>> {
   auto result = std::vector<std::string>{};
   boost::split(result, str, boost::is_any_of(" "));
@@ -209,13 +209,13 @@ auto ReadCommand(const std::string& str)
 
 std::string ListCommands() {
   auto ss = std::stringstream{};
-  for (const auto& scan : kCommands) {
+  for (const auto &scan : kCommands) {
     ss << scan << "  ";
   }
   return ss.str();
 }
 
-void Routine(IOChannel& io) {
+void Routine(IOChannel &io) {
   auto buf = std::string{};
   std::cout << ListCommands() << std::endl;
   for (;;) {
@@ -249,22 +249,22 @@ void Routine(IOChannel& io) {
         case kLogout:
           throw ExitException{"exiting..."};
       }
-    } catch (ExitException& ex) {
+    } catch (ExitException &ex) {
       std::cout << ex.what() << std::endl;
       return;
-    } catch (std::exception& ex) {
+    } catch (std::exception &ex) {
       std::cerr << ex.what() << std::endl;
     }
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
   using namespace boost::asio::ip;
-  
+
   // silence logs
-  std::ofstream nullstream;
+  std::ofstream nullstream{};
   std::clog.rdbuf(nullstream.rdbuf());
 
   try {
@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
     auto io = SecureDataChannel::ConnectToDataChannelAsClient(
         socket_io, prv_key, id, server_common_name, root_ca_path);
     Routine(*io);
-  } catch (std::exception& ex) {
+  } catch (std::exception &ex) {
     std::cerr << ex.what() << std::endl;
   }
 }

@@ -2,7 +2,7 @@
 #define S3L_IOCOMMUNICATION_H
 
 #include "constants.h"
-#include "util.h"
+#include "../util.h"
 #include <barrier>
 #include <exception>
 #include <optional>
@@ -15,7 +15,7 @@ class IOChannel {
   /// questa funzione continua e` bloccante e continua ad aspettare
   /// byte finche` non ne riceve esattamente n
   virtual Vec<u8> Read(size_t n) = 0;
-  virtual void Write(const Vec<u8>& buf) = 0;
+  virtual void Write(const Vec<u8> &buf) = 0;
   virtual bool IsClosed() = 0;
   virtual void Close() noexcept = 0;
   virtual ~IOChannel() = default;

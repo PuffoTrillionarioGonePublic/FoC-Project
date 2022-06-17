@@ -11,7 +11,7 @@ Vec<u8> SocketChannel::Read(size_t n) {
   return v;
 }
 
-void SocketChannel::Write(const Vec<u8>& v) {
+void SocketChannel::Write(const Vec<u8> &v) {
   size_t bytes_written = 0;
   do {
     auto buf = ::boost::asio::buffer(v.data() + bytes_written,

@@ -3,10 +3,10 @@
 
 //#include "../crypto_api.hh"
 #include "../util.h"
+#include "error.hh"
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include "error.hh"
 
 namespace crypto {
 
@@ -18,7 +18,8 @@ inline auto PubKeyFromBytes(const ByteArray auto &v) {
   BIO_write(biobox.get(), v.data(), v.size());
   auto pubkey = PEM_read_bio_PUBKEY(biobox.get(), nullptr, nullptr, nullptr);
   OPENSSLCHECKALLOC(pubkey);
-  return std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>{pubkey, EVP_PKEY_free};
+  return std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>{pubkey,
+                                                               EVP_PKEY_free};
 }
 
 inline auto PrivKeyFromBytes(const ByteArray auto &v) {
@@ -27,17 +28,19 @@ inline auto PrivKeyFromBytes(const ByteArray auto &v) {
   auto biobox = BIO_Box(bio, BIO_free);
 
   BIO_write(biobox.get(), v.data(), v.size());
-  auto pubkey = PEM_read_bio_PrivateKey(biobox.get(), nullptr, nullptr, nullptr);
+  auto pubkey =
+      PEM_read_bio_PrivateKey(biobox.get(), nullptr, nullptr, nullptr);
   OPENSSLCHECKALLOC(pubkey);
-  return std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>{pubkey, EVP_PKEY_free};
+  return std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>{pubkey,
+                                                               EVP_PKEY_free};
 }
 struct Signature {
   EVP_MD_CTX *ctx_;
 
   Signature() {
     ctx_ = EVP_MD_CTX_new();
-	OPENSSLCHECKALLOC(ctx_);
-    const EVP_MD *md = EVP_sha256(); // TODO: make it customizable
+    OPENSSLCHECKALLOC(ctx_);
+    const EVP_MD *md = EVP_sha256();  // TODO: make it customizable
     OPENSSLCHECK(EVP_SignInit(ctx_, md));
   }
 
@@ -59,19 +62,17 @@ struct Signature {
     return sign;
   }
 
-  ~Signature() {
-    EVP_MD_CTX_free(ctx_);
-  }
+  ~Signature() { EVP_MD_CTX_free(ctx_); }
 
   static Vec<u8> Make2(EVP_PKEY *privkey, const ByteArray auto &data) {
     return Signature().Update(data).Sign(privkey);
   }
 
-  static Vec<u8> Make(const ByteArray auto prv_key, const ByteArray auto &data) {
+  static Vec<u8> Make(const ByteArray auto prv_key,
+                      const ByteArray auto &data) {
     auto tmp = PrivKeyFromBytes(prv_key);
     return Make2(tmp.get(), data);
   }
-
 };
 
 struct SignatureVerification {
@@ -79,7 +80,7 @@ struct SignatureVerification {
 
   SignatureVerification() {
     ctx_ = EVP_MD_CTX_new();
-	OPENSSLCHECKALLOC(ctx_);
+    OPENSSLCHECKALLOC(ctx_);
     const EVP_MD *md = EVP_sha256();
     OPENSSLCHECK(EVP_VerifyInit(ctx_, md));
   }
@@ -96,22 +97,19 @@ struct SignatureVerification {
   bool Verify(const ByteArray auto &sig, EVP_PKEY *pubkey) {
     int res = EVP_VerifyFinal(ctx_, sig.data(), sig.size(), pubkey);
 
-    if (res == -1)
-      throw std::runtime_error("Error in signature verification");
+    if (res == -1) throw std::runtime_error("Error in signature verification");
 
     return res == 1;
   }
 
-  ~SignatureVerification() {
-    EVP_MD_CTX_free(ctx_);
-  }
+  ~SignatureVerification() { EVP_MD_CTX_free(ctx_); }
 
-  static bool Make(EVP_PKEY *pubkey, const ByteArray auto &data, const ByteArray auto &sig) {
+  static bool Make(EVP_PKEY *pubkey, const ByteArray auto &data,
+                   const ByteArray auto &sig) {
     return SignatureVerification().Update(data).Verify(sig, pubkey);
   }
 
-  static bool Make(const ByteArray auto &pubkey,
-                   const ByteArray auto &data,
+  static bool Make(const ByteArray auto &pubkey, const ByteArray auto &data,
                    const ByteArray auto &sig) {
     auto pubkey_box = PubKeyFromBytes(pubkey);
     return Make(pubkey_box.get(), data, sig);
@@ -133,23 +131,24 @@ struct PKEYEncrypt {
     size_t outlen;
 
     // determine buffer length
-    OPENSSLCHECK(EVP_PKEY_encrypt(ctx_, nullptr, &outlen, data.data(), data.size()));
+    OPENSSLCHECK(
+        EVP_PKEY_encrypt(ctx_, nullptr, &outlen, data.data(), data.size()));
 
     auto out = Vec<u8>(outlen);
-    OPENSSLCHECK(EVP_PKEY_encrypt(ctx_, out.data(), &outlen, data.data(), data.size()));
+    OPENSSLCHECK(
+        EVP_PKEY_encrypt(ctx_, out.data(), &outlen, data.data(), data.size()));
 
     return out;
   }
 
-  ~PKEYEncrypt() {
-    EVP_PKEY_CTX_free(ctx_);
-  }
+  ~PKEYEncrypt() { EVP_PKEY_CTX_free(ctx_); }
 
   static Vec<u8> Make(EVP_PKEY *pubkey, const ByteArray auto &data) {
     return PKEYEncrypt(pubkey).Encrypt(data);
   }
 
-  static Vec<u8> Make(const ByteArray auto &pubkey, const ByteArray auto &data) {
+  static Vec<u8> Make(const ByteArray auto &pubkey,
+                      const ByteArray auto &data) {
     auto pub = PubKeyFromBytes(pubkey);
     return Make(pub.get(), data);
   }
@@ -170,19 +169,19 @@ struct PKEYDecrypt {
     size_t outlen;
 
     // determine buffer length
-    OPENSSLCHECK(EVP_PKEY_decrypt(ctx_, nullptr, &outlen, data.data(), data.size()));
+    OPENSSLCHECK(
+        EVP_PKEY_decrypt(ctx_, nullptr, &outlen, data.data(), data.size()));
 
     auto out = Vec<u8>(outlen);
-    OPENSSLCHECK(EVP_PKEY_decrypt(ctx_, out.data(), &outlen, data.data(), data.size()));
+    OPENSSLCHECK(
+        EVP_PKEY_decrypt(ctx_, out.data(), &outlen, data.data(), data.size()));
 
     out.resize(outlen);
 
     return out;
   }
 
-  ~PKEYDecrypt() {
-    EVP_PKEY_CTX_free(ctx_);
-  }
+  ~PKEYDecrypt() { EVP_PKEY_CTX_free(ctx_); }
 
   static Vec<u8> Make(EVP_PKEY *privkey, const ByteArray auto &data) {
     return PKEYDecrypt(privkey).Decrypt(data);
@@ -235,13 +234,8 @@ inline SecVec<u8> PrivkeyFromFileAsBytes(const char *path) {
   OPENSSLCHECKALLOC(bio);
   auto biobox = BIO_Box(bio, BIO_free);
   auto prv_key = PrivkeyFromFile(path);
-  OPENSSLCHECK(PEM_write_bio_PrivateKey(biobox.get(),
-                                        prv_key.get(),
-                                        nullptr,
-                                        nullptr,
-                                        0,
-                                        nullptr,
-                                        nullptr));
+  OPENSSLCHECK(PEM_write_bio_PrivateKey(biobox.get(), prv_key.get(), nullptr,
+                                        nullptr, 0, nullptr, nullptr));
   u8 *ptr;
   i64 size = BIO_get_mem_data(biobox.get(), &ptr);
   auto rv = SecVec<u8>(ptr, ptr + size);
@@ -252,6 +246,6 @@ inline SecVec<u8> PrivkeyFromFileAsBytes(const std::string &path) {
   return PrivkeyFromFileAsBytes(path.c_str());
 }
 
-} // /namespace crypto
+}  // namespace crypto
 
-#endif // /CRYPTO_PUBKEY_H
+#endif  // /CRYPTO_PUBKEY_H

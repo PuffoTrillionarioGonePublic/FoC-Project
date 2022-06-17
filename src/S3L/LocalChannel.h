@@ -3,7 +3,7 @@
 
 #include "IOChannel.h"
 #include "constants.h"
-#include "util.h"
+#include "../util.h"
 #include <sys/socket.h>
 #include <barrier>
 #include <condition_variable>
@@ -85,7 +85,7 @@ class LocalChannel : public IOChannel {
     return v;
   }
 
-  void Write(const Vec<u8>& v) override {
+  void Write(const Vec<u8> &v) override {
     RegisterCurrentThread();
     size_t bytes_written = 0;
     do {

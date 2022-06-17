@@ -1,5 +1,5 @@
 
-#include "util.h"
+#include "../util.h"
 #include <iostream>
 #include <thread>
 #include <variant>
@@ -10,7 +10,7 @@ const std::string kData2 = "A stately pleasure dome decree...";
 /*
  *       ___________________________________________________________
  *      |               |           |           |                   |   0
- *       | content type  |  length   |  version  |   sequence number |
+ *      | content type  |  length   |  version  |   sequence number |
  *      |_______________|___________|___________|___________________|
  *      |                                                           |   8
  *      |                                                           |
@@ -56,6 +56,3 @@ int main() {
   // SerializeMessage(ClientHelloContent{});
 }
 
-//#include "../Server/main2.cpp"
-
-// int main3() {return main2();}

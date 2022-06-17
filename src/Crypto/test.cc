@@ -1,17 +1,17 @@
+#include "Encryptor.hh"
 #include "crypto.hh"
-#include <stdio.h>
+#include <sys/types.h>
+#include <cstdio>
 
-template<ByteArray T>
+template <ByteArray T>
 void puthex(T &t) {
-  for (const auto &e : t)
-    printf("%02x", e);
+  for (const auto &e : t) printf("%02x", e);
   printf("\n");
 }
 
-template<typename T>
+template <typename T>
 void putchars(const std::vector<T> &t) {
-  for (const auto &e : t)
-    putc(e, stdout);
+  for (const auto &e : t) putc(e, stdout);
   putc('\n', stdout);
 }
 void testRandomBytes() {
@@ -34,7 +34,8 @@ void testHash() {
 
 void testHmac() {
   auto s = "Hello world!"_u8;
-  auto k = std::vector<u8>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  auto k =
+      std::vector<u8>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   auto hmac = crypto::HMAC::Make(k, s);
 
   /*py
@@ -55,9 +56,10 @@ void testctr() {
   /*
   >>> from Crypto.Cipher import AES
   >>> from Crypto.Util import Counter
-  >>> c = Counter.new(16*8, initial_value=int.from_bytes(bytes(range(16)), "big"))
-  >>> AES.new(bytes(range(16)), AES.MODE_CTR, counter=c).encrypt(b"Hello world!").hex()
-  '42f167d92e4e872a83aff079'
+  >>> c = Counter.new(16*8, initial_value=int.from_bytes(bytes(range(16)),
+  "big"))
+  >>> AES.new(bytes(range(16)), AES.MODE_CTR, counter=c).encrypt(b"Hello
+  world!").hex() '42f167d92e4e872a83aff079'
   */
   puthex(c);
 
@@ -134,13 +136,39 @@ void testdh() {
   puthex(skeyb);
 }
 
+
+
+void testEncryptor() {
+  auto p = "Hello world!"_u8;
+  auto k = SecVec<u8>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  auto iv = Vec<u8>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  auto encryptor = crypto::AES128CTREncryptor{k, iv};
+  auto c = encryptor.Encrypt(p);
+
+  /*
+  >>> from Crypto.Cipher import AES
+  >>> from Crypto.Util import Counter
+  >>> c = Counter.new(16*8, initial_value=int.from_bytes(bytes(range(16)),
+  "big"))
+  >>> AES.new(bytes(range(16)), AES.MODE_CTR, counter=c).encrypt(b"Hello
+  world!").hex() '42f167d92e4e872a83aff079'
+  */
+  puthex(c);
+
+  auto decryptor = crypto::AES128CTRDecryptor{k, iv};
+  auto pp = decryptor.Decrypt(c);
+  auto s = std::string{pp.begin(), pp.end()};
+  printf("%s\n", s.c_str());
+}
+
 int main() {
-  //testRandomBytes();
-  //testHash();
-  //testHmac();
-  //testctr();
-  //testPubkey();
-  //testSign();
-  //testcert();
-  testdh();
+  testEncryptor();
+  // testRandomBytes();
+  // testHash();
+  // testHmac();
+  // testctr();
+  // testPubkey();
+  // testSign();
+  // testcert();
+  //testdh();
 }

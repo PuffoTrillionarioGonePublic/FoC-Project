@@ -11,41 +11,41 @@ struct SizeCalculator {
   SizeCalculator() = default;
 
   template <typename A>
-  friend SizeCalculator& operator<<(SizeCalculator& s,
-                                    const std::vector<u8, A>& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &s,
+                                    const std::vector<u8, A> &a) {
     s.size += a.size();
     return s;
   }
 
   template <typename A>
-  friend SizeCalculator& operator<<(SizeCalculator&& s,
-                                    const std::vector<u8, A>& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &&s,
+                                    const std::vector<u8, A> &a) {
     s.size += a.size();
     return s;
   }
 
   template <size_t N>
-  friend SizeCalculator& operator<<(SizeCalculator& s,
-                                    const std::array<u8, N>& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &s,
+                                    const std::array<u8, N> &a) {
     s.size += a.size();
     return s;
   }
 
   template <size_t N>
-  friend SizeCalculator& operator<<(SizeCalculator&& s,
-                                    const std::array<u8, N>& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &&s,
+                                    const std::array<u8, N> &a) {
     s.size += a.size();
     return s;
   }
 
-  friend SizeCalculator& operator<<(SizeCalculator& s,
-                                    const std::integral auto& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &s,
+                                    const std::integral auto &a) {
     s.size += sizeof(a);
     return s;
   }
 
-  friend SizeCalculator& operator<<(SizeCalculator&& s,
-                                    const std::integral auto& a) {
+  friend SizeCalculator &operator<<(SizeCalculator &&s,
+                                    const std::integral auto &a) {
     s.size += sizeof(a);
     return s;
   }

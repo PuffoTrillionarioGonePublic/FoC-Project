@@ -1,7 +1,11 @@
 #ifndef BOOSTSYNCHRONOUSSERVER_UTIL_H
 #define BOOSTSYNCHRONOUSSERVER_UTIL_H
 
-
+#include "ALPHeader.h"
+#include "../S3L/IOChannel.h"
+#include "../S3L/SocketChannel.h"
+#include "../util.h"
+#include "xml.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -10,22 +14,15 @@
 #include <boost/asio.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <any>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <thread>
 #include <utility>
-#include "ALPHeader.h"
-#include "xml.h"
-#include <any>
-#include "S3L/IOChannel.h"
-#include "S3L/SocketChannel.h"
-#include "util.h"
-
 
 static const int HEADER_SIZE = 1024;
-
 
 struct DummyStruct {
   u8 dummy{};
@@ -33,7 +30,8 @@ struct DummyStruct {
   DECL_FOR_SERIALIZATION(DummyStruct, dummy)
 };
 
-inline void WriteObject(IOChannel &io, const auto &obj, const std::string &endpoint = "") {
+inline void WriteObject(IOChannel &io, const auto &obj,
+                        const std::string &endpoint = "") {
   ALPHeader alp_header{};
   std::string obj_serialized;
   try {
@@ -53,15 +51,11 @@ inline void WriteObject(IOChannel &io, const auto &obj, const std::string &endpo
   io.Write(Vec<u8>(obj_serialized.begin(), obj_serialized.end()));
 }
 
-
-
 void CallEndpoint(IOChannel &io, const std::string &endpoint) {
   WriteObject(io, DummyStruct{}, endpoint);
 }
 
-void WriteFileChunk(IOChannel &io,
-                    const Vec<u8> &v,
-                    size_t offset,
+void WriteFileChunk(IOChannel &io, const Vec<u8> &v, size_t offset,
                     const std::string &endpoint,
                     const std::string &file_path = "") {
   ALPHeader alp_header{};
@@ -83,8 +77,6 @@ void WriteFileChunk(IOChannel &io,
   io.Write(v);
 }
 
-
-
 auto ReadFileChunk(IOChannel &io) -> std::tuple<Vec<u8>, u64> {
   Vec<u8> buf = io.Read(HEADER_SIZE);
   auto header_xml = std::string{buf.begin(), buf.end()};
@@ -93,12 +85,7 @@ auto ReadFileChunk(IOChannel &io) -> std::tuple<Vec<u8>, u64> {
   return {io.Read(header.body_size), *header.range_begin};
 }
 
-
-
-
-
-
-template<typename T>
+template <typename T>
 T ReadObject(IOChannel &io) {
   Vec<u8> buf = io.Read(HEADER_SIZE);
   auto header_xml = std::string{buf.begin(), buf.end()};
@@ -109,5 +96,4 @@ T ReadObject(IOChannel &io) {
   return xml::Deserialize<T>(body_xml);
 }
 
-
-#endif //BOOSTSYNCHRONOUSSERVER_UTIL_H
+#endif  // BOOSTSYNCHRONOUSSERVER_UTIL_H

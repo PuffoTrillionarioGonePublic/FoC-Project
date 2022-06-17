@@ -1,12 +1,12 @@
 #ifndef S3L_RECORD_H
 #define S3L_RECORD_H
 
-#include "Crypto/api.hh"
+#include "../Crypto/api.hh"
 #include "NetworkBuffer.h"
 #include "S3LHeader.h"
 #include "SizeCalculator.h"
 #include "constants.h"
-#include "util.h"
+#include "../util.h"
 #include "utility.h"
 
 /// aggiornare l'header ogni volta che si modifica il content

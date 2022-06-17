@@ -10,12 +10,10 @@ struct BadConnectionMessage : public S3LMessage {
 
   explicit BadConnectionMessage(const S3LHeader &rh) : rh{rh} {}
 
-  [[nodiscard]]
-  NetworkBuffer Serialize() const override;
+  [[nodiscard]] NetworkBuffer Serialize() const override;
 
-  static std::shared_ptr<BadConnectionMessage>
-  Deserialize(const S3LHeader &rh, const Vec<u8> &content_bytes);
+  static std::shared_ptr<BadConnectionMessage> Deserialize(
+      const S3LHeader &rh, const Vec<u8> &content_bytes);
 };
 
-
-#endif //FOC_PROJECT_SRC_S3L_BADCONNECTIONMESSAGE_H_
+#endif  // FOC_PROJECT_SRC_S3L_BADCONNECTIONMESSAGE_H_

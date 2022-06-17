@@ -50,11 +50,11 @@ static DH *get_dh2048_auto(void) {
   return dh;
 }
 
-struct DH_mng {
+struct DiffieHellmanManager {
   EVP_PKEY_CTX *ctx_;
   EVP_PKEY *dh_key_ = nullptr;
 
-  DH_mng() {
+  DiffieHellmanManager() {
     // store dh generator and modulus as pkey type
     EVP_PKEY *params = EVP_PKEY_new();
     OPENSSLCHECKALLOC(params);
@@ -125,7 +125,7 @@ struct DH_mng {
     return rv;
   }
 
-  ~DH_mng() {
+  ~DiffieHellmanManager() {
     EVP_PKEY_free(dh_key_);
     EVP_PKEY_CTX_free(ctx_);
   }

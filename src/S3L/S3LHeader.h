@@ -1,8 +1,9 @@
 #ifndef S3L_RECORDHEADER_H
 #define S3L_RECORDHEADER_H
 #include "NetworkBuffer.h"
-#include "util.h"
-NetworkBuffer& operator<<(NetworkBuffer&, const struct S3LHeader&);
+#include "../util.h"
+
+NetworkBuffer &operator<<(NetworkBuffer &, const struct S3LHeader &);
 
 struct S3LHeader final {
   u8 content_type;
@@ -21,19 +22,19 @@ struct S3LHeader final {
   [[nodiscard]] NetworkBuffer Serialize() const;
 };
 
-inline NetworkBuffer& operator>>(NetworkBuffer& network_buffer, S3LHeader& r) {
+inline NetworkBuffer &operator>>(NetworkBuffer &network_buffer, S3LHeader &r) {
   return network_buffer >> r.content_type >> r.length >> r.version >>
          r.sequence_number;
 }
 
-inline NetworkBuffer& operator<<(NetworkBuffer& network_buffer,
-                                 const S3LHeader& r) {
+inline NetworkBuffer &operator<<(NetworkBuffer &network_buffer,
+                                 const S3LHeader &r) {
   return network_buffer << r.content_type << r.length << r.version
                         << r.sequence_number;
 }
 
-inline NetworkBuffer& operator<<(NetworkBuffer&& network_buffer,
-                                 const S3LHeader& r) {
+inline NetworkBuffer &operator<<(NetworkBuffer &&network_buffer,
+                                 const S3LHeader &r) {
   return network_buffer << r;
 }
 

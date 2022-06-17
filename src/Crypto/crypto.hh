@@ -7,5 +7,5 @@
 #include "pubkey.hh"
 #include "random.hh"
 #include "simmetric.hh"
-
+#include "Encryptor.hh"
 #endif  // /CRYPTO_H

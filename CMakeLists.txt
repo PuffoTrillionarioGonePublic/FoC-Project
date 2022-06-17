@@ -9,9 +9,10 @@ if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif ()
 include_directories(/usr/include/openssl/)
-include_directories(src/)
+#include_directories(src/)
 add_compile_options(-Wall -Wextra -Wpedantic)
-#add_compile_options(-O3)
+add_compile_options(-Wno-deprecated-declarations)
+add_compile_options(-O3)
 
 link_libraries(crypto)
 link_libraries(z)
@@ -26,6 +27,7 @@ add_executable(server
         src/S3L/SecureDataChannel.cc
         src/S3L/SocketChannel.cc
         src/S3L/ClientHelloMessage.cc
+        src/S3L/ClientFinished.cc
         src/S3L/ServerHelloMessage.cc
         src/S3L/ShutdownMessage.cc
         src/S3L/DataMessage.cc
@@ -38,6 +40,7 @@ add_executable(client
         src/S3L/SecureDataChannel.cc
         src/S3L/SocketChannel.cc
         src/S3L/ClientHelloMessage.cc
+        src/S3L/ClientFinished.cc
         src/S3L/ServerHelloMessage.cc
         src/S3L/ShutdownMessage.cc
         src/S3L/DataMessage.cc
