@@ -243,8 +243,8 @@ int main(int argc, char *argv[]) {
   (void)argv;
 
   // silence logs
-  std::ofstream nullstream{};
-  std::clog.rdbuf(nullstream.rdbuf());
+  //std::ofstream nullstream{};
+  //std::clog.rdbuf(nullstream.rdbuf());
 
   auto tree = boost::property_tree::ptree{};
   boost::property_tree::read_xml("../data/server-config.xml", tree);

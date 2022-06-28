@@ -264,8 +264,8 @@ int main(int argc, char *argv[]) {
   using namespace boost::asio::ip;
 
   // silence logs
-  std::ofstream nullstream{};
-  std::clog.rdbuf(nullstream.rdbuf());
+  //std::ofstream nullstream{};
+  //std::clog.rdbuf(nullstream.rdbuf());
 
   try {
     auto tree = boost::property_tree::ptree{};

@@ -16,11 +16,11 @@ auto SecureDataChannel::MakeClientSideHandshake(IOChannel &channel,
               Vec<u8> > {
   auto dh_context = crypto::DiffieHellmanManager{};
   auto client_hello = ClientHelloMessage::Create(dh_context);
-  std::clog << "c) Client Public Key spedita: " << client_hello.client_dh_pubkey << std::endl;
+  // std::clog << "c) Client Public Key spedita: " << client_hello.client_dh_pubkey << std::endl;
   WriteS3LMessage(channel, client_hello);
   auto server_hello = ReadS3LMessage<ServerHelloMessage>(channel);
   server_hello.ValidateOrThrow(client_hello.client_dh_pubkey, common_name, root_ca_path);
-  std::clog << "c) Server Public Key ricevuta: " << server_hello.server_dh_pubkey << std::endl;
+  // std::clog << "c) Server Public Key ricevuta: " << server_hello.server_dh_pubkey << std::endl;
   SecArray<u8, kSha256Length> key = dh_context.GetSharedKey(server_hello.server_dh_pubkey);
   auto [auth_key, enc_key] = SplitArray<kAuthKeyLength, kSymmetricKeyLength>(key);
   auto client_finished = ClientFinished::CreateAndAuthenticate(auth_key,
@@ -44,11 +44,11 @@ auto SecureDataChannel::MakeServerSideHandshake(IOChannel &channel,
   auto client_hello = ReadS3LMessage<ClientHelloMessage>(channel);
 
   auto dh_context = crypto::DiffieHellmanManager();
-  std::clog << "s) Client Pub Key ricevuta: " << client_hello.client_dh_pubkey << std::endl;
+  // std::clog << "s) Client Pub Key ricevuta: " << client_hello.client_dh_pubkey << std::endl;
   SecArray<u8, kSha256Length> key = dh_context.GetSharedKey(client_hello.client_dh_pubkey);
   Vec<u8> dh_pub_key = dh_context.GetPubkeyAsBytes();
   auto server_hello = ServerHelloMessage::From(dh_pub_key, client_hello.client_dh_pubkey, certificate, prv_key);
-  std::clog << "s) Server Public Key spedita: " << server_hello.server_dh_pubkey << std::endl;
+  // std::clog << "s) Server Public Key spedita: " << server_hello.server_dh_pubkey << std::endl;
   WriteS3LMessage(channel, server_hello);
   auto [auth_key, enc_key] = SplitArray<kAuthKeyLength, kSymmetricKeyLength>(key);
   auto client_finished = ReadS3LMessage<ClientFinished>(channel);
@@ -63,8 +63,8 @@ void SecureDataChannel::ValidateOrThrow() {
     throw std::runtime_error{"SecureDataChannel is closed"};
   if (!ready_) {
     auto [auth_key, symmetric_key, iv, peer_public_key] = init_cb_(*io_);
-    std::clog << "Auth key: " << auth_key << std::endl;
-    std::clog << "symmetric key: " << symmetric_key << std::endl;
+    // std::clog << "Auth key: " << auth_key << std::endl;
+    // std::clog << "symmetric key: " << symmetric_key << std::endl;
     auth_key_ = auth_key;
     symmetric_key_ = symmetric_key;
     peer_public_key_ = peer_public_key;
@@ -87,7 +87,7 @@ void SecureDataChannel::Close_() noexcept {
 			ReadS3LMessage<ShutdownMessage>(*io_, decryptor_, auth_key_);
 
 	} catch (std::exception &err) {
-		std::clog << err.what() << std::endl;
+		// std::clog << err.what() << std::endl;
 	}
   }
   ready_ = false;

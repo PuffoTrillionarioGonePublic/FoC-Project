@@ -13,7 +13,7 @@ include_directories(/usr/include/openssl/)
 add_compile_options(-Wall -Wextra -Wpedantic)
 add_compile_options(-Wno-deprecated-declarations)
 add_compile_options(-O3)
-
+#add_compile_options(-fbranch-probabilities -fsplit-loops -fstdarg-opt -fsection-anchors -ftracer -fprofile-values -fprofile-reorder-functions -fvpt -funroll-loops)
 link_libraries(crypto)
 link_libraries(z)
 link_libraries(boost_iostreams)
