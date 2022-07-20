@@ -1,0 +1,4 @@
+# FoC-Project
+Project for the foundation of cybersecurity course, using modern c++ and openssl
+
+This project consists in a simple application where there are pre-registered users on a server, with their own public key, and each user can connect to the server using her private key. She has a dedicated storage where she can do basic things like upload and download files. The main focus of this project is develop a cryptographic protocol, used in a client-server application. This protocol, called S3L (Simple Secure Socket Layer) has been developed indipendetly from network purpose and from application layer needs, and is quite similar to Station to Station protocol. Unfortunately we were forced to use OpenSSL library, which is a c library, and there isn't any official wrapper for c++, so we had to create a wrapping interface by ourselves. The version of the language used is c++20, which allows us to use very useful things like concepts constraints.
